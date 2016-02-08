@@ -42,4 +42,5 @@ class Analysis extends Base
         return $return;
 
     }
+
 }

@@ -10,7 +10,6 @@ class Plugin extends Base
     public function initialize()
     {
 
-        $this->template->setTemplateOverride('analytic/sidebar', 'Analysis:analytic/sidebar');
 #        $this->template->setTemplateOverride('analytic/tasks', 'Analysis:analytic/tasks');
         $this->template->hook->attach('template:analytic:sidebar', 'Analysis:analytic/sidebar-extension');
         $this->on('app.bootstrap', function($container) {

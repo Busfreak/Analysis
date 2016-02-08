@@ -96,33 +96,77 @@ class Analysis extends Base
     {
         $project = $this->getProject();
         $swimlane_id = $this->request->getIntegerParam('swimlane_id');
-        $metrics = $this->taskDistributionAnalytic->build($project['id'], $swimlane_id);
-        $closed['count'] = 0;
+#        $metrics = $this->taskDistributionAnalytic->build($project['id'], $swimlane_id);
+        $metrics = $this->build($project['id'], $swimlane_id);
+        $closedcount = 0;
         $closedtasks = $this->taskFinder->getAll($project['id'], 0);
 
         if ($swimlane_id > 0){
             foreach ($closedtasks as $closedtask) {
-                $closed['count'] += ($closedtask['swimlane_id'] == $swimlane_id) ? 1 : 0;
+                $closedcount += ($closedtask['swimlane_id'] == $swimlane_id) ? 1 : 0;
             }
         }
         else{
-                 $closed['count'] = count($closedtasks);
+                 $closedcount = count($closedtasks);
         }    
-        $closed['total'] = 0;
+        $closedtotal = 0;
         foreach ($metrics as $metric) {
-            $closed['total'] += $metric['nb_tasks'];
+            $closedtotal += $metric['nb_tasks'];
         }
-        $closed['percentage'] = round(($closed['count'] * 100) / $closed['total'], 2);
 
-        $this->response->html($this->helper->layout->analytic('analytic/tasks', array(
+            $metrics[] = array(
+                'column_title' => t('Closed'),
+                'nb_tasks' => $closedcount . '/' . $closedtotal,
+                'percentage' => round(($closedcount * 100) / $closedtotal, 2)
+            );
+
+
+        $this->response->html($this->helper->layout->analytic('analysis:analytic/tasks', array(
             'project' => $project,
             'metrics' => $metrics,
             'title' => t('Task repartition for "%s"', $project['name']),
             'swimlanes' => $this->swimlane->getAll($project['id']),
             'swimlaneActive' => $this->swimlane->getNameById($swimlane_id),
-            'closed' => $closed,
         )));
     }
+
+
+    public function build($project_id, $swimlane_id = 0)
+    {
+        $metrics = array();
+        $total = 0;
+        $columns = $this->board->getColumns($project_id);
+
+        foreach ($columns as $column) {
+            if ($swimlane_id === 0) {
+                $nb_tasks = $this->taskFinder->countByColumnId($project_id, $column['id']);
+            }
+            else
+            {
+                $nb_tasks = $this->taskFinder->countByColumnAndSwimlaneId($project_id, $column['id'], $swimlane_id);
+            }
+
+            $total += $nb_tasks;
+
+            $metrics[] = array(
+                'column_title' => $column['title'],
+                'nb_tasks' => $nb_tasks,
+            );
+        }
+
+        if ($total === 0) {
+            return array();
+        }
+
+        foreach ($metrics as &$metric) {
+            $metric['percentage'] = round(($metric['nb_tasks'] * 100) / $total, 2);
+        }
+
+        return $metrics;
+    }
+
+
+
 
     /**
      * Show users repartition
