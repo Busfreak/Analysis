@@ -13,6 +13,212 @@ use Kanboard\Model\Task as TaskModel;
  */
 class Analysis extends Base
 {
+
+    /**
+     * Show list view for projects
+     *
+     * @access public
+     */
+    public function summaryx()
+    {
+        $params = $this->getProjectFilters('listing', 'show');
+        $query = $this->taskFilter->search($params['filters']['search'])->filterByProject($params['project']['id'])->getQuery();
+
+        $paginator = $this->paginator
+            ->setUrl('listing', 'show', array('project_id' => $params['project']['id']))
+            ->setMax(30)
+            ->setOrder(TaskModel::TABLE.'.id')
+            ->setDirection('DESC')
+            ->setQuery($query)
+            ->calculate();
+
+        $this->response->html($this->helper->layout->app('listing/show', $params + array(
+            'paginator' => $paginator,
+        )));
+    }
+
+
+
+    /**
+     * Show summary of all tasks
+     *
+     * @access public
+     */
+    public function summary()
+    {
+        $debug = array();
+        $project = $this->getProject();
+        $project_id = $project['id'];
+        $columns = $this->board->getColumns($project['id']);
+        $swimlanes = $this->swimlane->getSwimlanes($project_id);
+        $task_ids = $this->taskFinder->getAll($project['id'], 1);
+        foreach ($task_ids as $task_id):
+            $tasks[] = $this->taskFinder->getDetails($task_id['id']);
+        endforeach;
+        $params = $this->getFilters('analysis', 'summary', 'Analysis');
+        $search = urldecode($this->request->getStringParam('search'));
+        $query = $this->taskFilter->search($params['filters']['search'])->filterByProject($params['project']['id'])->getQuery();
+
+        $paginator = $this->paginator
+            ->setUrl('listing', 'show', array('project_id' => $params['project']['id']))
+            ->setMax(30)
+            ->setOrder(TaskModel::TABLE.'.id')
+            ->setDirection('DESC')
+            ->setQuery($query)
+            ->calculate();
+
+
+
+
+
+        $debug = $this->taskFilter->search($params['filters']['search']);
+
+#        $e = $this->getAllTasks($project['id'], 1);
+        
+        
+        
+# $e =  $this->taskFinder->getProjectUserOverviewQuery($array, 1);
+
+#$e = $this->container;
+#$e = $this->container['analysis']->getSwimlanesList($project['id']);
+#$e = $this->analysis->getSwimlanesList($project['id']);
+
+# alle tasks aus einem board lesen:
+#$e = $this->taskFinder->getAll($project['id']);
+
+# alle Swimlanes lesen
+#$e = $swimlanes = $this->swimlane->getSwimlanes($project_id);
+
+# alle Spalten lesen
+#$e = $columns = $this->board->getColumns($project['id']);
+
+        $this->response->html($this->helper->layout->analytic('analysis:task/summary', array(
+            'categories' => $this->category->getList($params['project']['id'], false),
+            'project' => $project,
+            'title' => $project['name'].' &gt; summary',
+            'swimlanes' => $swimlanes,
+            'columns' => $columns,
+#            'tasks' => $tasks,
+            'paginator' => $paginator,
+            'debug' => $debug,
+        ) + $params));
+    }
+    
+    private function getTasks($project_id, $column_id)
+    {
+        return $this->db
+            ->table('tasks')
+            ->columns('date_completed', 'date_creation', 'date_started')
+            ->eq('project_id', $project_id)
+            ->desc('id')
+            ->limit(1)
+            ->findAll();
+    }
+
+
+    /**
+     * Common method to get filters
+     *
+     * based on function getProjectFilters
+     *
+     * @access protected
+     * @param  string $controller
+     * @param  string $action
+     * @return array
+     */
+    protected function getFilters($controller, $action, $plugin)
+    {
+        $project = $this->getProject();
+        $search = $this->request->getStringParam('search', $this->userSession->getFilters($project['id']));
+
+        $filters = array(
+            'controller' => $controller,
+            'action' => $action,
+            'project_id' => $project['id'],
+            'search' => urldecode($search),
+            'plugin' => $plugin,
+        );
+
+        $this->userSession->setFilters($project['id'], $filters['search']);
+
+        return array(
+            'project' => $project,
+            'filters' => $filters,
+            'title' => $project['name'],
+            'description' => $this->getProjectDescription($project),
+        );
+    }
+
+
+
+
+
+    /**
+     * Show a task
+     *
+     * @access public
+     */
+    public function show()
+    {
+        $task = $this->getTasks();
+echo'<pre>';
+var_dump($task);
+echo'</pre>';
+        $subtasks = $this->subtask->getAll($task['id']);
+        $values = array(
+            'id' => $task['id'],
+            'date_started' => $task['date_started'],
+            'time_estimated' => $task['time_estimated'] ?: '',
+            'time_spent' => $task['time_spent'] ?: '',
+        );
+
+        $values = $this->dateParser->format($values, array('date_started'), $this->config->get('application_datetime_format', 'd-m-Y H:i'));
+
+        $this->response->html($this->helper->layout->task('task/show', array(
+            'project' => $this->project->getById($task['project_id']),
+            'files' => $this->file->getAllDocuments($task['id']),
+            'images' => $this->file->getAllImages($task['id']),
+            'comments' => $this->comment->getAll($task['id'], $this->userSession->getCommentSorting()),
+            'subtasks' => $subtasks,
+            'links' => $this->taskLink->getAllGroupedByLabel($task['id']),
+            'task' => $task,
+            'values' => $values,
+            'link_label_list' => $this->link->getList(0, false),
+            'columns_list' => $this->board->getColumnsList($task['project_id']),
+            'colors_list' => $this->color->getList(),
+            'users_list' => $this->projectUserRole->getAssignableUsersList($task['project_id'], true, false, false),
+            'title' => $task['project_name'].' &gt; '.$task['title'],
+            'recurrence_trigger_list' => $this->task->getRecurrenceTriggerList(),
+            'recurrence_timeframe_list' => $this->task->getRecurrenceTimeframeList(),
+            'recurrence_basedate_list' => $this->task->getRecurrenceBasedateList(),
+        )));
+    }
+
+    /**
+     * Common method to get a task for task views
+     *
+     * @access protected
+     * @return array
+     */
+    protected function getTask($project_id)
+    {
+        
+        $task = $this->taskFinder->getDetails($this->request->getIntegerParam('task_id'));
+
+        if (empty($task)) {
+            $this->notfound();
+        }
+
+        if ($project_id !== 0 && $project_id != $task['project_id']) {
+            $this->forbidden();
+        }
+
+        return $task;
+    }
+
+
+
+
     /**
      * Show average Lead and Cycle time
      *
