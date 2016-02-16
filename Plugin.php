@@ -22,6 +22,7 @@ class Plugin extends Base
         return array(
             'Plugin\Analysis\Model' => array(
                 'Analysis',
+                'Filter',
             )
         );
     }

@@ -16,17 +16,18 @@
 
 <div>
 <?php foreach($paginator->getCollection() as $task): ?>
+
 <?= $this->render('analysis:task/details', array(
     'task' => $task,
     'project' => $project,
-    'editable' => $this->user->hasProjectAccess('taskmodification', 'edit', $project['id']),
+    'editable' => false,
 )) ?>
 
 <?= $this->render('analysis:task/description', array('task' => $task)) ?>
 
-<?= $this->render('subtask/show', array(
+<?= $this->render('analysis:subtask/show', array(
     'task' => $task,
-    'subtasks' => $subtasks,
+    'subtasks' => $subtasks[$task['id']],
     'project' => $project,
     'users_list' => isset($users_list) ? $users_list : array(),
     'editable' => false,
@@ -35,7 +36,7 @@
 
 <?= $this->render('analysis:tasklink/show', array(
     'task' => $task,
-    'links' => $links,
+    'links' => $links[$task['id']],
     'link_label_list' => $link_label_list,
     'editable' => false,
     'is_public' => false,
@@ -45,7 +46,7 @@
 
 <?= $this->render('analysis:task/comments', array(
     'task' => $task,
-    'comments' => $comments,
+    'comments' => $comments[$task['id']],
     'project' => $project,
     'editable' => false,
 )) ?>
