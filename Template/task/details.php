@@ -26,12 +26,6 @@
                         <strong><?= t('Complexity:') ?></strong> <span><?= $this->e($task['score']) ?></span>
                     </li>
                 <?php endif ?>
-                <?php if ($project['is_public']): ?>
-                <li class="smaller">
-                    <i class="fa fa-external-link fa-fw"></i>
-                    <?= $this->url->link(t('Public link'), 'task', 'readonly', array('task_id' => $task['id'], 'token' => $project['token']), false, '', '', true) ?>
-                </li>
-                <?php endif ?>
             </ul>
         </div>
         <div class="task-summary-column">
@@ -116,12 +110,6 @@
                 <li>
                     <strong><?= t('Started:') ?></strong>
                     <span><?= $this->dt->datetime($task['date_started']) ?></span>
-                </li>
-                <?php endif ?>
-                <?php if ($task['date_moved']): ?>
-                <li>
-                    <strong><?= t('Moved:') ?></strong>
-                    <span><?= $this->dt->datetime($task['date_moved']) ?></span>
                 </li>
                 <?php endif ?>
             </ul>
