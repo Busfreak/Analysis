@@ -16,32 +16,34 @@
                 <li>
                     <strong><?= t('Priority:') ?></strong> <span><?= $task['priority'] ?></span>
                 </li>
+                    <li>
+                        <strong><?= t('Reference:') ?></strong>
                 <?php if (! empty($task['reference'])): ?>
-                    <li>
-                        <strong><?= t('Reference:') ?></strong> <span><?= $this->e($task['reference']) ?></span>
-                    </li>
+                    <span><?= $this->e($task['reference']) ?></span>
                 <?php endif ?>
+                    </li>
+                    <li>
+                        <strong><?= t('Complexity:') ?></strong>
                 <?php if (! empty($task['score'])): ?>
-                    <li>
-                        <strong><?= t('Complexity:') ?></strong> <span><?= $this->e($task['score']) ?></span>
-                    </li>
+                    <span><?= $this->e($task['score']) ?></span>
                 <?php endif ?>
+                    </li>
             </ul>
         </div>
         <div class="task-summary-column">
             <ul class="no-bullet">
-                <?php if (! empty($task['category_name'])): ?>
                     <li>
                         <strong><?= t('Category:') ?></strong>
+                <?php if (! empty($task['category_name'])): ?>
                         <span><?= $this->e($task['category_name']) ?></span>
-                    </li>
                 <?php endif ?>
-                <?php if (! empty($task['swimlane_name'])): ?>
+                    </li>
                     <li>
                         <strong><?= t('Swimlane:') ?></strong>
+                <?php if (! empty($task['swimlane_name'])): ?>
                         <span><?= $this->e($task['swimlane_name']) ?></span>
-                    </li>
                 <?php endif ?>
+                    </li>
                 <li>
                     <strong><?= t('Column:') ?></strong>
                     <span><?= $this->e($task['column_title']) ?></span>
@@ -64,30 +66,30 @@
                     <?php endif ?>
                     </span>
                 </li>
-                <?php if ($task['creator_username']): ?>
                     <li>
                         <strong><?= t('Creator:') ?></strong>
+                <?php if ($task['creator_username']): ?>
                         <span><?= $this->e($task['creator_name'] ?: $task['creator_username']) ?></span>
-                    </li>
                 <?php endif ?>
-                <?php if ($task['date_due']): ?>
+                    </li>
                 <li>
                     <strong><?= t('Due date:') ?></strong>
+                <?php if ($task['date_due']): ?>
                     <span><?= $this->dt->date($task['date_due']) ?></span>
-                </li>
                 <?php endif ?>
-                <?php if ($task['time_estimated']): ?>
+                </li>
                 <li>
                     <strong><?= t('Time estimated:') ?></strong>
+                <?php if ($task['time_estimated']): ?>
                     <span><?= t('%s hours', $task['time_estimated']) ?></span>
-                </li>
                 <?php endif ?>
-                <?php if ($task['time_spent']): ?>
+                </li>
                 <li>
                     <strong><?= t('Time spent:') ?></strong>
+                <?php if ($task['time_spent']): ?>
                     <span><?= t('%s hours', $task['time_spent']) ?></span>
-                </li>
                 <?php endif ?>
+                </li>
             </ul>
         </div>
         <div class="task-summary-column">
@@ -100,12 +102,12 @@
                     <strong><?= t('Modified:') ?></strong>
                     <span><?= $this->dt->datetime($task['date_modification']) ?></span>
                 </li>
-                <?php if ($task['date_completed']): ?>
                 <li>
                     <strong><?= t('Completed:') ?></strong>
+                <?php if ($task['date_completed']): ?>
                     <span><?= $this->dt->datetime($task['date_completed']) ?></span>
-                </li>
                 <?php endif ?>
+                </li>
                 <?php if ($task['date_started']): ?>
                 <li>
                     <strong><?= t('Started:') ?></strong>
