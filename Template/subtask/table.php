@@ -1,13 +1,17 @@
     <table class="subtasks-table">
         <tr>
             <th class="column-40"><?= t('Title') ?></th>
+            <th><?= t('Status') ?></th>
             <th><?= t('Assignee') ?></th>
             <th><?= t('Time tracking') ?></th>
         </tr>
         <?php foreach ($subtasks as $subtask): ?>
         <tr>
             <td>
-                <?= $this->subtask->getTitle($subtask) ?>
+                <?= $subtask['title'] ?>
+            </td>
+            <td>
+                <?= $subtask['status'] ?>
             </td>
             <td>
                 <?php if (! empty($subtask['username'])): ?>

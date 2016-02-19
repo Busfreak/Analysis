@@ -94,9 +94,22 @@ class Analysis extends Base
         ) + $params));
     }
     
+    public function SubtaskStatus(array $subtask)
+    {
+        if ($subtask['status'] == 0) {
+            $subtask['status'] = t('Todo');
+        } elseif ($subtask['status'] == 1) {
+            $subtask['status'] = t('In progress');
+        } else {
+            $subtask['status'] = t('Done');
+        }
+
+        return $subtask;
+    }
+
     private function getSubTasks($task_id)
     {
-        return $this->db
+        $tmpSubTasks = $this->db
             ->table(Subtask::TABLE)
             ->columns(
                 Subtask::TABLE.'.id',
@@ -112,6 +125,12 @@ class Analysis extends Base
             ->join(User::TABLE, 'id', 'user_id')
             ->eq(Subtask::TABLE.'.task_id', $task_id)
             ->findAll();
+        $SubTasks = array();
+        foreach($tmpSubTasks as $SubTask):
+            $SubTasks[] = $this->SubtaskStatus($SubTask);
+        endforeach;
+
+        return $SubTasks;
     }
 
     private function getComments($task_id, $sorting = 'ASC')
