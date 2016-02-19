@@ -1,0 +1,11 @@
+Hook ändern, damit auch ein media="print" möglich ist
+
+2. Hook einfügen!!!
+
+Template/layout.php, Zeile 24
+
+<?= $this->asset->css('plugins/analysis/css/style.css', true, 'print') ?>
+<?= $this->hook->asset('css', 'template:layout:css') ?>
+
+<link rel="stylesheet" href="/kanboard/plugins/analysis/css/style.css?1455896917" media="print">
+<link rel="stylesheet" href="/kanboard/plugins/analysis/css/style.css?1455896917" media="screen">
