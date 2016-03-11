@@ -23,7 +23,7 @@
             <ul>
                 <li><a href="#" class="filter-helper" data-append-filter="category:none"><?= t('No category') ?></a></li>
                 <?php foreach ($categories as $category): ?>
-                    <li><a href="#" class="filter-helper" data-append-filter='category:"<?= $this->e($category) ?>"'><?= $this->e($category) ?></a></li>
+                    <li><a href="#" class="filter-helper" data-append-filter='category:"<?= $this->text->e($category) ?>"'><?= $this->text->e($category) ?></a></li>
                 <?php endforeach ?>
             </ul>
         </div>
@@ -35,7 +35,7 @@
             <ul>
                 <li><a href="#" class="filter-helper" data-append-filter="status:open"><?= t('All swimlanes') ?></a></li>
                 <?php foreach ($swimlanes as $swimlane): ?>
-                    <li><a href="#" class="filter-helper" data-append-filter='swimlane:"<?= $this->e($swimlane['name']) ?>"'><?= $this->e($swimlane['name']) ?></a></li>
+                    <li><a href="#" class="filter-helper" data-append-filter='swimlane:"<?= $this->text->e($swimlane['name']) ?>"'><?= $this->text->e($swimlane['name']) ?></a></li>
                 <?php endforeach ?>
             </ul>
         </div>
