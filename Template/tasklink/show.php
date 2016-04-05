@@ -1,7 +1,9 @@
-<?php if (! empty($links)): ?>
 <div class="page-header">
     <h2><?= t('Internal links') ?></h2>
 </div>
+<?php if (empty($links)): ?>
+    <p class="alert"><?= t('There is no internal link for the moment.') ?></p>
+<?php else: ?>
 <table id="links" class="table-small table-stripped">
     <tr>
         <th class="column-20"><?= t('Label') ?></th>
@@ -9,6 +11,9 @@
         <th class="column-20"><?= t('Project') ?></th>
         <th><?= t('Column') ?></th>
         <th><?= t('Assignee') ?></th>
+        <?php if ($editable && $this->user->hasProjectAccess('Tasklink', 'edit', $task['project_id'])): ?>
+            <th class="column-5"><?= t('Action') ?></th>
+        <?php endif ?>
     </tr>
     <?php foreach ($links as $label => $grouped_links): ?>
         <?php $hide_td = false ?>
@@ -20,14 +25,25 @@
             <?php endif ?>
 
             <td>
-                <?= $this->url->link(
-                    $this->text->e('#'.$link['task_id'].' '.$link['title']),
-                    'task',
-                    'show',
-                    array('task_id' => $link['task_id'], 'project_id' => $link['project_id']),
-                    false,
-                    $link['is_active'] ? '' : 'task-link-closed'
-                ) ?>
+                <?php if ($is_public): ?>
+                    <?= $this->url->link(
+                        $this->text->e('#'.$link['task_id'].' '.$link['title']),
+                        'task',
+                        'readonly',
+                        array('task_id' => $link['task_id'], 'token' => $project['token']),
+                        false,
+                        $link['is_active'] ? '' : 'task-link-closed'
+                    ) ?>
+                <?php else: ?>
+                    <?= $this->url->link(
+                        $this->text->e('#'.$link['task_id'].' '.$link['title']),
+                        'task',
+                        'show',
+                        array('task_id' => $link['task_id'], 'project_id' => $link['project_id']),
+                        false,
+                        $link['is_active'] ? '' : 'task-link-closed'
+                    ) ?>
+                <?php endif ?>
 
                 <br>
 
@@ -43,12 +59,53 @@
             <td><?= $this->text->e($link['column_title']) ?></td>
             <td>
                 <?php if (! empty($link['task_assignee_username'])): ?>
-                    <?= $this->text->e($link['task_assignee_name'] ?: $link['task_assignee_username']) ?>
+                    <?php if ($editable): ?>
+                        <?= $this->url->link($this->text->e($link['task_assignee_name'] ?: $link['task_assignee_username']), 'user', 'show', array('user_id' => $link['task_assignee_id'])) ?>
+                    <?php else: ?>
+                        <?= $this->text->e($link['task_assignee_name'] ?: $link['task_assignee_username']) ?>
+                    <?php endif ?>
                 <?php endif ?>
             </td>
+            <?php if ($editable && $this->user->hasProjectAccess('Tasklink', 'edit', $task['project_id'])): ?>
+            <td>
+                <div class="dropdown">
+                <a href="#" class="dropdown-menu dropdown-menu-link-icon"><i class="fa fa-cog fa-fw"></i><i class="fa fa-caret-down"></i></a>
+                <ul>
+                    <li><?= $this->url->link(t('Edit'), 'tasklink', 'edit', array('link_id' => $link['id'], 'task_id' => $task['id'], 'project_id' => $task['project_id'])) ?></li>
+                    <li><?= $this->url->link(t('Remove'), 'tasklink', 'confirm', array('link_id' => $link['id'], 'task_id' => $task['id'], 'project_id' => $task['project_id'])) ?></li>
+                </ul>
+                </div>
+            </td>
+            <?php endif ?>
         </tr>
         <?php endforeach ?>
     <?php endforeach ?>
 </table>
+
+<?php if ($editable && isset($link_label_list)): ?>
+    <form action="<?= $this->url->href('tasklink', 'save', array('task_id' => $task['id'], 'project_id' => $task['project_id'])) ?>" method="post" autocomplete="off">
+
+        <?= $this->form->csrf() ?>
+        <?= $this->form->hidden('task_id', array('task_id' => $task['id'])) ?>
+        <?= $this->form->hidden('opposite_task_id', array()) ?>
+
+        <?= $this->form->select('link_id', $link_label_list, array(), array()) ?>
+
+        <?= $this->form->text(
+            'title',
+            array(),
+            array(),
+            array(
+                'required',
+                'placeholder="'.t('Start to type task title...').'"',
+                'title="'.t('Start to type task title...').'"',
+                'data-dst-field="opposite_task_id"',
+                'data-search-url="'.$this->url->href('TaskHelper', 'autocomplete', array('exclude_task_id' => $task['id'])).'"',
+            ),
+            'autocomplete') ?>
+
+        <input type="submit" value="<?= t('Add') ?>" class="btn btn-blue"/>
+    </form>
+<?php endif ?>
 
 <?php endif ?>

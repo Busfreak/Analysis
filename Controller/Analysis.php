@@ -18,6 +18,31 @@ class Analysis extends Base
 {
 
     /**
+     * Show list view for projects
+     *
+     * @access public
+     */
+    public function summaryx()
+    {
+        $params = $this->getProjectFilters('listing', 'show');
+        $query = $this->filter->search($params['filters']['search'])->filterByProject($params['project']['id'])->getQuery();
+
+        $paginator = $this->paginator
+            ->setUrl('listing', 'show', array('project_id' => $params['project']['id']))
+            ->setMax(30)
+            ->setOrder(TaskModel::TABLE.'.id')
+            ->setDirection('DESC')
+            ->setQuery($query)
+            ->calculate();
+
+        $this->response->html($this->helper->layout->app('listing/show', $params + array(
+            'paginator' => $paginator,
+        )));
+    }
+
+
+
+    /**
      * Show summary of all tasks
      *
      * @access public
@@ -26,11 +51,9 @@ class Analysis extends Base
     {
         $debug = array();
         $subtasks = array();
-        $comments = array();
-        $links = array();
         $project = $this->getProject();
         $project_id = $project['id'];
-        $columns = $this->board->getColumns($project['id']);
+        $columns = $this->column->getAll($project_id);
         $swimlanes = $this->swimlane->getSwimlanes($project_id);
         $task_ids = $this->taskFinder->getAll($project['id'], 1);
         foreach ($task_ids as $task_id):
@@ -53,7 +76,6 @@ class Analysis extends Base
             $comments[$task['id']] = $this->getComments($task['id']);
             $links[$task['id']] = $this->taskLink->getAllGroupedByLabel($task['id']);
         endforeach;
-
 
 
 #        $debug = $this->filter->search($params['filters']['search'])->filterByProject($params['project']['id'])->getQuery();
@@ -94,22 +116,9 @@ class Analysis extends Base
         ) + $params));
     }
     
-    public function SubtaskStatus(array $subtask)
-    {
-        if ($subtask['status'] == 0) {
-            $subtask['status'] = t('Todo');
-        } elseif ($subtask['status'] == 1) {
-            $subtask['status'] = t('In progress');
-        } else {
-            $subtask['status'] = t('Done');
-        }
-
-        return $subtask;
-    }
-
     private function getSubTasks($task_id)
     {
-        $tmpSubTasks = $this->db
+        return $this->db
             ->table(Subtask::TABLE)
             ->columns(
                 Subtask::TABLE.'.id',
@@ -125,12 +134,6 @@ class Analysis extends Base
             ->join(User::TABLE, 'id', 'user_id')
             ->eq(Subtask::TABLE.'.task_id', $task_id)
             ->findAll();
-        $SubTasks = array();
-        foreach($tmpSubTasks as $SubTask):
-            $SubTasks[] = $this->SubtaskStatus($SubTask);
-        endforeach;
-
-        return $SubTasks;
     }
 
     private function getComments($task_id, $sorting = 'ASC')
@@ -219,7 +222,7 @@ public function tzu(){
             'project' => $project,
             'filters' => $filters,
             'title' => $project['name'],
-            'description' => $this->getProjectDescription($project),
+            'description' => $this->helper->projectHeader->getDescription($project),
         );
     }
 
@@ -415,7 +418,7 @@ echo'</pre>';
     {
         $metrics = array();
         $total = 0;
-        $columns = $this->board->getColumns($project_id);
+        $columns = $this->column->getAll($project_id);
 
         foreach ($columns as $column) {
             if ($swimlane_id === 0) {
