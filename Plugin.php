@@ -13,9 +13,12 @@ class Plugin extends Base
 #        $this->template->setTemplateOverride('analytic/tasks', 'Analysis:analytic/tasks');
         $this->template->hook->attach('template:analytic:sidebar', 'Analysis:analytic/sidebar-extension');
         $this->hook->on('template:layout:css', 'plugins/analysis/css/style.css');
-        $this->on('app.bootstrap', function($container) {
-            Translator::load($container['config']->getCurrentLanguage(), __DIR__.'/Locale');
-        });
+    }
+
+    public function onStartup()
+    {
+        // Translation
+        Translator::load($this->language->getCurrentLanguage(), __DIR__.'/Locale');
     }
 
     public function getClasses()
