@@ -1,9 +1,8 @@
-    <?= $this->render('analysis:analytic/filters', array(
-        'project' => $project,
-        'filters' => $filters,
-        'categories' => $categories,
-        'swimlanes' => $swimlanes,
-    )) ?>
+<section id="main">
+
+
+
+
 
     <?php if ($paginator->isEmpty()): ?>
         <p class="alert"><?= t('No tasks found.') ?></p>
@@ -55,3 +54,4 @@
 <?php endforeach ?>
 </div>
     <?php endif ?>
+</section>

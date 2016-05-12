@@ -7,6 +7,7 @@ use Kanboard\Model\Task as TaskModel;
 use Kanboard\Model\Subtask;
 use Kanboard\Model\User;
 use Kanboard\Model\Comment;
+use Kanboard\Filter\TaskProjectFilter;
 
 /**
  * Project Analytic controller
@@ -22,24 +23,55 @@ class Analysis extends Base
      *
      * @access public
      */
-    public function summaryx()
+    public function summary()
     {
-        $params = $this->getProjectFilters('listing', 'show');
-        $query = $this->filter->search($params['filters']['search'])->filterByProject($params['project']['id'])->getQuery();
+        $project = $this->getProject();
+        $search = $this->helper->projectHeader->getSearchQuery($project);
+        $filter = $this->taskLexer->build($search)->withFilter(new TaskProjectFilter($project['id']));
+#var_dump($filter);
 
         $paginator = $this->paginator
-            ->setUrl('listing', 'show', array('project_id' => $params['project']['id']))
+            ->setUrl('analysis', 'summary', array('project_id' => $project['id'], 'plugin' => 'Analysis'))
             ->setMax(30)
             ->setOrder(TaskModel::TABLE.'.id')
-            ->setDirection('DESC')
-            ->setQuery($query)
+            ->setQuery($this->taskQuery
+                ->withFilter(new TaskProjectFilter($project['id']))
+                ->getQuery()
+            )
             ->calculate();
 
-        $this->response->html($this->helper->layout->app('listing/show', $params + array(
+        foreach($paginator->getCollection() as $task):
+            $subtasks[$task['id']] = $this->getSubTasks($task['id']);
+            $comments[$task['id']] = $this->getComments($task['id']);
+            $links[$task['id']] = $this->taskLink->getAllGroupedByLabel($task['id']);
+        endforeach;
+
+
+        $this->response->html($this->analyticLayout('analysis:project/summary', array(
+            'project' => $project,
             'paginator' => $paginator,
+			'subtasks' => $subtasks,
+			'links' => $links,
+            'link_label_list' => $this->link->getList(0, false),
+			'comments' => $comments,
+            'metrics' => $this->estimatedTimeComparisonAnalytic->build($project['id']),
+            'title' => $project['name'].' &gt; ' . t('Summary'),
         )));
+
     }
 
+    /**
+     * Common layout for analytic views
+     *
+     * @access public
+     * @param  string $template
+     * @param  array  $params
+     * @return string
+     */
+    public function analyticLayout($template, array $params)
+    {
+        return $this->helper->layout->subLayout('analysis:analytic/layout', 'analytic/sidebar', $template, $params);
+    }
 
 
     /**
@@ -47,7 +79,7 @@ class Analysis extends Base
      *
      * @access public
      */
-    public function summary()
+    public function summaryx()
     {
         $debug = array();
         $subtasks = array();
@@ -61,14 +93,19 @@ class Analysis extends Base
         endforeach;
         $params = $this->getFilters('analysis', 'summary', 'Analysis');
         $search = urldecode($this->request->getStringParam('search'));
-        $query = $this->filter->search($params['filters']['search'])->filterByProject($params['project']['id'])->getQuery();
+#        $query = $this->filter->search($params['filters']['search'])->filterByProject($params['project']['id'])->getQuery();
+#        $query = $this->filter->search($params['filters']['search']);
+#die($params['filters']['search']);
 
         $paginator = $this->paginator
             ->setUrl('listing', 'show', array('project_id' => $params['project']['id']))
             ->setMax(100)
             ->setOrder(TaskModel::TABLE.'.id')
             ->setDirection('DESC')
-            ->setQuery($query)
+            ->setQuery($this->taskQuery
+                ->withFilter(new TaskProjectFilter($params['project']['id']))
+                ->getQuery()
+            )
             ->calculate();
 
         foreach($paginator->getCollection() as $task):
@@ -76,7 +113,6 @@ class Analysis extends Base
             $comments[$task['id']] = $this->getComments($task['id']);
             $links[$task['id']] = $this->taskLink->getAllGroupedByLabel($task['id']);
         endforeach;
-
 
 #        $debug = $this->filter->search($params['filters']['search'])->filterByProject($params['project']['id'])->getQuery();
 #        $debug = $subtasks;
@@ -148,7 +184,8 @@ class Analysis extends Base
                 Comment::TABLE.'.comment',
                 User::TABLE.'.username',
                 User::TABLE.'.name',
-                User::TABLE.'.email'
+                User::TABLE.'.email',
+				User::TABLE.'.avatar_path'
             )
             ->join(User::TABLE, 'id', 'user_id')
             ->orderBy(Comment::TABLE.'.date_creation', $sorting)

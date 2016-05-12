@@ -9,10 +9,9 @@ class Plugin extends Base
 {
     public function initialize()
     {
-
-#        $this->template->setTemplateOverride('analytic/tasks', 'Analysis:analytic/tasks');
-        $this->template->hook->attach('template:analytic:sidebar', 'Analysis:analytic/sidebar-extension');
-        $this->hook->on('template:layout:css', 'plugins/Analysis/css/style.css');
+        $this->helper->register('AnalysisHelper', '\Kanboard\Plugin\Analysis\Helper\AnalysisHelper');
+		$this->template->hook->attach('template:analytic:sidebar', 'Analysis:analytic/sidebar-extension');
+        $this->hook->on('template:layout:css', 'plugins/Analysis/Assets/css/style.css');
     }
 
     public function onStartup()
@@ -33,7 +32,7 @@ class Plugin extends Base
 
     public function getPluginName()
     {
-        return 'QMAnalysis';
+        return 'Analysis';
     }
 
     public function getPluginDescription()
@@ -53,6 +52,6 @@ class Plugin extends Base
 
 	    public function getPluginHomepage()
     {
-        return 'https://github.com/Busfreak/QMAnalysis';
+        return 'https://github.com/Busfreak/Analysis';
     }
 }
