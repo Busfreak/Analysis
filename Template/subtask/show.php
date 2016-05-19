@@ -1,11 +1,12 @@
 <?php if (! empty($subtasks)): ?>
-<div class="page-header">
-    <h2><?= t('Sub-Tasks') ?></h2>
-</div>
-
-<div id="subtasks">
-
-    <?= $this->render('analysis:subtask/table', array('subtasks' => $subtasks, 'task' => $task)) ?>
-
-</div>
+    <div class="accordion-title">
+        <h3><a href="#" class="fa accordion-toggle"></a> <?= t('Sub-Tasks') ?></h3>
+    </div>
+    <div class="accordion-content">
+        <?= $this->render('subtask/table', array(
+            'subtasks' => $subtasks,
+            'task' => $task,
+            'editable' => $editable
+        )) ?>
+    </div>
 <?php endif ?>

@@ -1,5 +1,44 @@
-@media only print {
-    .filter-box {
+    .project-header {
         display: none;
     }
+
+    .avatar-left {
+        display: none;
+        float: right;
+    }
+
+    #task-summary h2 {
+        font-size: 1em;
+    }
+
+    .task-summary-container {
+        padding: 0px;
+        border: 1px solid #000;
+    }
+
+    .task-summary-column {
+        font-size: .8em;
+    }
+
+    .accordion-title h3 {
+        font-size: 1em;
+    }
+
+    .comment-title {
+        margin-left: 1px;
+        margin-bottom: 1px;
+    }
+
+    .comment-username {
+        font-size: .8em;
+    }
+
+    .comment-content {
+        margin-left: 1px;
+    }
+
+.accordion-content {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    margin-left: 5px;
 }

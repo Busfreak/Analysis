@@ -1,20 +1,12 @@
 <?php if (! empty($task['description'])): ?>
-    <div id="description" class="task-show-section">
-        <div class="page-header">
-            <h2><?= t('Description') ?></h2>
-        </div>
-
-        <article class="markdown task-show-description">
-            <?= $this->text->markdown(
-                $task['description'],
-                array(
-                    'controller' => 'task',
-                    'action' => 'show',
-                    'params' => array(
-                        'project_id' => $task['project_id']
-                    )
-                )
-            ) ?>
+<section class="accordion-section <?= empty($task['description']) ? 'accordion-collapsed' : '' ?>">
+    <div class="accordion-title">
+        <h3><a href="#" class="fa accordion-toggle"></a> <?= t('Description') ?></h3>
+    </div>
+    <div class="accordion-content">
+        <article class="markdown">
+            <?= $this->text->markdown($task['description'], isset($is_public) && $is_public) ?>
         </article>
     </div>
+</section>
 <?php endif ?>

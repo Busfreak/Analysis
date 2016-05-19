@@ -4,58 +4,50 @@ namespace Kanboard\Plugin\Analysis\Controller;
 
 use Kanboard\Controller\Base;
 use Kanboard\Model\Task as TaskModel;
-use Kanboard\Model\Subtask;
 use Kanboard\Model\User;
-use Kanboard\Model\Comment;
 use Kanboard\Filter\TaskProjectFilter;
 
 /**
- * Project Analytic controller
+ * Project Analysis controller
  *
  * @package  controller
- * @author   Frederic Guillot
+ * @author   Martin Middeke
  */
 class Analysis extends Base
 {
 
     /**
-     * Show list view for projects
+     * Show summary of all tasks
      *
      * @access public
      */
     public function summary()
     {
-        $project = $this->getProject();
-        $search = $this->helper->projectHeader->getSearchQuery($project);
-        $filter = $this->taskLexer->build($search)->withFilter(new TaskProjectFilter($project['id']));
-#var_dump($filter);
+		$project = $this->getProject();
+        $search = urldecode($this->request->getStringParam('search'));
+#        $search = $this->userSession->getFilters($project['id']);
 
         $paginator = $this->paginator
-            ->setUrl('analysis', 'summary', array('project_id' => $project['id'], 'plugin' => 'Analysis'))
+            ->setUrl('analysis', 'summary', array('project_id' => $project['id'], 'plugin' => 'Analysis', 'search' => $search))
             ->setMax(30)
-            ->setOrder(TaskModel::TABLE.'.id')
-            ->setQuery($this->taskQuery
-                ->withFilter(new TaskProjectFilter($project['id']))
+            ->setOrder(TaskModel::TABLE.'.column_id')
+            ->setDirection('DESC')
+            ->setQuery($this->taskLexer
+                ->build($search)
+#                ->withFilter(new TaskProjectFilter($project['id']))
                 ->getQuery()
             )
+#            ->setQuery($this->filter->getExtendedQuery($project['id']))
             ->calculate();
 
-        foreach($paginator->getCollection() as $task):
-            $subtasks[$task['id']] = $this->getSubTasks($task['id']);
-            $comments[$task['id']] = $this->getComments($task['id']);
-            $links[$task['id']] = $this->taskLink->getAllGroupedByLabel($task['id']);
-        endforeach;
 
-
+$debug = 1;
         $this->response->html($this->analyticLayout('analysis:project/summary', array(
             'project' => $project,
             'paginator' => $paginator,
-			'subtasks' => $subtasks,
-			'links' => $links,
             'link_label_list' => $this->link->getList(0, false),
-			'comments' => $comments,
-            'metrics' => $this->estimatedTimeComparisonAnalytic->build($project['id']),
             'title' => $project['name'].' &gt; ' . t('Summary'),
+			'debug' => $debug,
         )));
 
     }
@@ -72,151 +64,6 @@ class Analysis extends Base
     {
         return $this->helper->layout->subLayout('analysis:analytic/layout', 'analytic/sidebar', $template, $params);
     }
-
-
-    /**
-     * Show summary of all tasks
-     *
-     * @access public
-     */
-    public function summaryx()
-    {
-        $debug = array();
-        $subtasks = array();
-        $project = $this->getProject();
-        $project_id = $project['id'];
-        $columns = $this->column->getAll($project_id);
-        $swimlanes = $this->swimlane->getSwimlanes($project_id);
-        $task_ids = $this->taskFinder->getAll($project['id'], 1);
-        foreach ($task_ids as $task_id):
-            $tasks[] = $this->taskFinder->getDetails($task_id['id']);
-        endforeach;
-        $params = $this->getFilters('analysis', 'summary', 'Analysis');
-        $search = urldecode($this->request->getStringParam('search'));
-#        $query = $this->filter->search($params['filters']['search'])->filterByProject($params['project']['id'])->getQuery();
-#        $query = $this->filter->search($params['filters']['search']);
-#die($params['filters']['search']);
-
-        $paginator = $this->paginator
-            ->setUrl('listing', 'show', array('project_id' => $params['project']['id']))
-            ->setMax(100)
-            ->setOrder(TaskModel::TABLE.'.id')
-            ->setDirection('DESC')
-            ->setQuery($this->taskQuery
-                ->withFilter(new TaskProjectFilter($params['project']['id']))
-                ->getQuery()
-            )
-            ->calculate();
-
-        foreach($paginator->getCollection() as $task):
-            $subtasks[$task['id']] = $this->getSubTasks($task['id']);
-            $comments[$task['id']] = $this->getComments($task['id']);
-            $links[$task['id']] = $this->taskLink->getAllGroupedByLabel($task['id']);
-        endforeach;
-
-#        $debug = $this->filter->search($params['filters']['search'])->filterByProject($params['project']['id'])->getQuery();
-#        $debug = $subtasks;
-
-#        $e = $this->getAllTasks($project['id'], 1);
-        
-        
-        
-# $e =  $this->taskFinder->getProjectUserOverviewQuery($array, 1);
-
-#$e = $this->container;
-#$e = $this->container['analysis']->getSwimlanesList($project['id']);
-#$e = $this->analysis->getSwimlanesList($project['id']);
-
-# alle tasks aus einem board lesen:
-#$e = $this->taskFinder->getAll($project['id']);
-
-# alle Swimlanes lesen
-#$e = $swimlanes = $this->swimlane->getSwimlanes($project_id);
-
-# alle Spalten lesen
-#$e = $columns = $this->board->getColumns($project['id']);
-
-        $this->response->html($this->helper->layout->analytic('analysis:task/summary', array(
-            'categories' => $this->category->getList($params['project']['id'], false),
-            'project' => $project,
-            'title' => $project['name'].' &gt; summary',
-            'swimlanes' => $swimlanes,
-            'columns' => $columns,
-#            'tasks' => $tasks,
-            'paginator' => $paginator,
-            'subtasks' => $subtasks,
-            'comments' => $comments,
-            'link_label_list' => $this->link->getList(0, false),
-            'links' => $links,
-            'debug' => $debug,
-        ) + $params));
-    }
-    
-    private function getSubTasks($task_id)
-    {
-        return $this->db
-            ->table(Subtask::TABLE)
-            ->columns(
-                Subtask::TABLE.'.id',
-                Subtask::TABLE.'.title',
-                Subtask::TABLE.'.status',
-                Subtask::TABLE.'.user_id',
-                Subtask::TABLE.'.time_estimated',
-                Subtask::TABLE.'.time_spent',
-                Subtask::TABLE.'.position',
-                User::TABLE.'.username',
-                User::TABLE.'.name'
-            )
-            ->join(User::TABLE, 'id', 'user_id')
-            ->eq(Subtask::TABLE.'.task_id', $task_id)
-            ->findAll();
-    }
-
-    private function getComments($task_id, $sorting = 'ASC')
-    {
-	      return $this->db
-            ->table(Comment::TABLE)
-            ->columns(
-                Comment::TABLE.'.id',
-                Comment::TABLE.'.date_creation',
-                Comment::TABLE.'.task_id',
-                Comment::TABLE.'.user_id',
-                Comment::TABLE.'.comment',
-                User::TABLE.'.username',
-                User::TABLE.'.name',
-                User::TABLE.'.email',
-				User::TABLE.'.avatar_path'
-            )
-            ->join(User::TABLE, 'id', 'user_id')
-            ->orderBy(Comment::TABLE.'.date_creation', $sorting)
-            ->eq(Comment::TABLE.'.task_id', $task_id)
-            ->findAll();
-}
-
-
-public function tzu(){
-	        return $this->db
-                    ->table(SubtaskTimeTracking::TABLE)
-                    ->columns(
-                        SubtaskTimeTracking::TABLE.'.id',
-                        SubtaskTimeTracking::TABLE.'.user_id',
-                        SubtaskTimeTracking::TABLE.'.subtask_id',
-                        SubtaskTimeTracking::TABLE.'.start',
-                        SubtaskTimeTracking::TABLE.'.time_spent',
-                        Subtask::TABLE.'.task_id',
-                        Subtask::TABLE.'.title AS subtask_title',
-                        Task::TABLE.'.title AS task_title',
-                        Task::TABLE.'.project_id',
-                        User::TABLE.'.username',
-                        User::TABLE.'.name'
-                    )
-                    ->join(Subtask::TABLE, 'id', 'subtask_id')
-                    ->join(Task::TABLE, 'id', 'task_id', Subtask::TABLE)
-                    ->join(User::TABLE, 'id', 'user_id')
-                    ->eq(Task::TABLE.'.project_id', $project_id)
-                    ->callback(array($this, 'applyUserRate'));
-}
-
 
     private function getTasks($project_id, $column_id)
     {
@@ -483,88 +330,5 @@ echo'</pre>';
         }
 
         return $metrics;
-    }
-
-
-
-
-    /**
-     * Show users repartition
-     *
-     * @access public
-     */
-    public function users()
-    {
-        $project = $this->getProject();
-
-        $this->response->html($this->helper->layout->analytic('analytic/users', array(
-            'project' => $project,
-            'metrics' => $this->userDistributionAnalytic->build($project['id']),
-            'title' => t('User repartition for "%s"', $project['name']),
-        )));
-    }
-
-    /**
-     * Show cumulative flow diagram
-     *
-     * @access public
-     */
-    public function cfd()
-    {
-        $this->commonAggregateMetrics('analytic/cfd', 'total', 'Cumulative flow diagram for "%s"');
-    }
-
-    /**
-     * Show burndown chart
-     *
-     * @access public
-     */
-    public function burndown()
-    {
-        $this->commonAggregateMetrics('analytic/burndown', 'score', 'Burndown chart for "%s"');
-    }
-
-    /**
-     * Common method for CFD and Burdown chart
-     *
-     * @access private
-     * @param string $template
-     * @param string $column
-     * @param string $title
-     */
-    private function commonAggregateMetrics($template, $column, $title)
-    {
-        $project = $this->getProject();
-        list($from, $to) = $this->getDates();
-
-        $display_graph = $this->projectDailyColumnStats->countDays($project['id'], $from, $to) >= 2;
-
-        $this->response->html($this->helper->layout->analytic($template, array(
-            'values' => array(
-                'from' => $from,
-                'to' => $to,
-            ),
-            'display_graph' => $display_graph,
-            'metrics' => $display_graph ? $this->projectDailyColumnStats->getAggregatedMetrics($project['id'], $from, $to, $column) : array(),
-            'project' => $project,
-            'date_format' => $this->config->get('application_date_format'),
-            'date_formats' => $this->dateParser->getAvailableFormats(),
-            'title' => t($title, $project['name']),
-        )));
-    }
-
-    private function getDates()
-    {
-        $values = $this->request->getValues();
-
-        $from = $this->request->getStringParam('from', date('Y-m-d', strtotime('-1week')));
-        $to = $this->request->getStringParam('to', date('Y-m-d'));
-
-        if (! empty($values)) {
-            $from = $values['from'];
-            $to = $values['to'];
-        }
-
-        return array($from, $to);
     }
 }

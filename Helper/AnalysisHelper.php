@@ -2,6 +2,9 @@
 namespace Kanboard\Plugin\Analysis\Helper;
 
 use Kanboard\Core\Base;
+use Kanboard\Model\Subtask;
+use Kanboard\Model\User;
+use Kanboard\Model\Comment;
 
 /**
  * Project Header Helper
@@ -75,5 +78,55 @@ class AnalysisHelper extends Base
         }
 
         return $description;
+    }
+
+    public function getSubTasks($task_id)
+    {
+        return $this->db
+            ->table(Subtask::TABLE)
+            ->columns(
+                Subtask::TABLE.'.id',
+                Subtask::TABLE.'.title',
+                Subtask::TABLE.'.status',
+                Subtask::TABLE.'.user_id',
+                Subtask::TABLE.'.time_estimated',
+                Subtask::TABLE.'.time_spent',
+                Subtask::TABLE.'.position',
+                User::TABLE.'.username',
+                User::TABLE.'.name'
+            )
+            ->join(User::TABLE, 'id', 'user_id')
+            ->eq(Subtask::TABLE.'.task_id', $task_id)
+            ->findAll();
+    }
+    public function getComments($task_id, $sorting = 'ASC')
+    {
+	      return $this->db
+            ->table(Comment::TABLE)
+            ->columns(
+                Comment::TABLE.'.id',
+                Comment::TABLE.'.date_creation',
+                Comment::TABLE.'.task_id',
+                Comment::TABLE.'.user_id',
+                Comment::TABLE.'.comment',
+                User::TABLE.'.username',
+                User::TABLE.'.name',
+                User::TABLE.'.email',
+				User::TABLE.'.avatar_path'
+            )
+            ->join(User::TABLE, 'id', 'user_id')
+            ->orderBy(Comment::TABLE.'.date_creation', $sorting)
+            ->eq(Comment::TABLE.'.task_id', $task_id)
+            ->findAll();
+    }
+
+    public function getInternalTaskLinks($task_id)
+    {
+        return $this->taskLink->getAllGroupedByLabel($task_id);
+    }
+
+    public function getExternalTaskLinks($task_id)
+    {
+        return $this->taskExternalLink->getAll($task_id);
     }
 }
