@@ -2,9 +2,9 @@
 namespace Kanboard\Plugin\Analysis\Helper;
 
 use Kanboard\Core\Base;
-use Kanboard\Model\Subtask;
-use Kanboard\Model\User;
-use Kanboard\Model\Comment;
+use Kanboard\Model\SubtaskModel;
+use Kanboard\Model\UserModel;
+use Kanboard\Model\CommentModel;
 
 /**
  * Project Header Helper
@@ -50,9 +50,9 @@ class AnalysisHelper extends Base
         return $this->template->render('Analysis:project_header/header', array(
             'project' => $project,
             'filters' => $filters,
-            'categories_list' => $this->category->getList($project['id'], false),
-            'users_list' => $this->projectUserRole->getAssignableUsersList($project['id'], false),
-            'custom_filters_list' => $this->customFilter->getAll($project['id'], $this->userSession->getId()),
+            'categories_list' => $this->categoryModel->getList($project['id'], false),
+            'users_list' => $this->projectUserRoleModel->getAssignableUsersList($project['id'], false),
+            'custom_filters_list' => $this->customFilterModel->getAll($project['id'], $this->userSession->getId()),
             'board_view' => $boardView,
         ));
     }
@@ -83,50 +83,50 @@ class AnalysisHelper extends Base
     public function getSubTasks($task_id)
     {
         return $this->db
-            ->table(Subtask::TABLE)
+            ->table(SubtaskModel::TABLE)
             ->columns(
-                Subtask::TABLE.'.id',
-                Subtask::TABLE.'.title',
-                Subtask::TABLE.'.status',
-                Subtask::TABLE.'.user_id',
-                Subtask::TABLE.'.time_estimated',
-                Subtask::TABLE.'.time_spent',
-                Subtask::TABLE.'.position',
-                User::TABLE.'.username',
-                User::TABLE.'.name'
+                SubtaskModel::TABLE.'.id',
+                SubtaskModel::TABLE.'.title',
+                SubtaskModel::TABLE.'.status',
+                SubtaskModel::TABLE.'.user_id',
+                SubtaskModel::TABLE.'.time_estimated',
+                SubtaskModel::TABLE.'.time_spent',
+                SubtaskModel::TABLE.'.position',
+                UserModel::TABLE.'.username',
+                UserModel::TABLE.'.name'
             )
-            ->join(User::TABLE, 'id', 'user_id')
-            ->eq(Subtask::TABLE.'.task_id', $task_id)
+            ->join(UserModel::TABLE, 'id', 'user_id')
+            ->eq(SubtaskModel::TABLE.'.task_id', $task_id)
             ->findAll();
     }
     public function getComments($task_id, $sorting = 'ASC')
     {
 	      return $this->db
-            ->table(Comment::TABLE)
+            ->table(CommentModel::TABLE)
             ->columns(
-                Comment::TABLE.'.id',
-                Comment::TABLE.'.date_creation',
-                Comment::TABLE.'.task_id',
-                Comment::TABLE.'.user_id',
-                Comment::TABLE.'.comment',
-                User::TABLE.'.username',
-                User::TABLE.'.name',
-                User::TABLE.'.email',
-				User::TABLE.'.avatar_path'
+                CommentModel::TABLE.'.id',
+                CommentModel::TABLE.'.date_creation',
+                CommentModel::TABLE.'.task_id',
+                CommentModel::TABLE.'.user_id',
+                CommentModel::TABLE.'.comment',
+                UserModel::TABLE.'.username',
+                UserModel::TABLE.'.name',
+                UserModel::TABLE.'.email',
+				UserModel::TABLE.'.avatar_path'
             )
-            ->join(User::TABLE, 'id', 'user_id')
-            ->orderBy(Comment::TABLE.'.date_creation', $sorting)
-            ->eq(Comment::TABLE.'.task_id', $task_id)
+            ->join(UserModel::TABLE, 'id', 'user_id')
+            ->orderBy(CommentModel::TABLE.'.date_creation', $sorting)
+            ->eq(CommentModel::TABLE.'.task_id', $task_id)
             ->findAll();
     }
 
     public function getInternalTaskLinks($task_id)
     {
-        return $this->taskLink->getAllGroupedByLabel($task_id);
+        return $this->taskLinkModel->getAllGroupedByLabel($task_id);
     }
 
     public function getExternalTaskLinks($task_id)
     {
-        return $this->taskExternalLink->getAll($task_id);
+        return $this->taskExternalLinkModel->getAll($task_id);
     }
 }

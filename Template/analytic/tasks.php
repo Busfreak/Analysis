@@ -12,11 +12,11 @@
     <h2><?= t('Swimlanes:') ?></h2>
     <ul>
         <li <?= ($swimlaneActive === '') ? 'style="list-style-type: square; color: red"' : '' ?>>
-            <?= $this->url->link(t('All swimlanes'), 'analysis', 'tasks', array('plugin' => 'analysis', 'project_id' => $project['id'])) ?>
+            <?= $this->url->link(t('All swimlanes'), 'analysisController', 'tasks', array('plugin' => 'analysis', 'project_id' => $project['id'])) ?>
         </li>
         <?php foreach ($swimlanes as $swimlane): ?>
         <li <?= ($swimlaneActive === $swimlane['name']) ? 'style="list-style-type: square; color: red"' : '' ?>>
-            <?= $this->url->link($swimlane['name'], 'analysis', 'tasks', array('plugin' => 'analysis', 'project_id' => $project['id'], 'swimlane_id' => $swimlane['id'])) ?>
+            <?= $this->url->link($swimlane['name'], 'analysisController', 'tasks', array('plugin' => 'analysis', 'project_id' => $project['id'], 'swimlane_id' => $swimlane['id'])) ?>
         </li>
         <?php endforeach ?>
     </ul>

@@ -12,13 +12,12 @@ class Plugin extends Base
         $this->helper->register('AnalysisHelper', '\Kanboard\Plugin\Analysis\Helper\AnalysisHelper');
 		$this->template->hook->attach('template:analytic:sidebar', 'Analysis:analytic/sidebar-extension');
         $this->hook->on('template:layout:head', 'Analysis:head');
-		
     }
 
     public function onStartup()
     {
         // Translation
-        Translator::load($this->language->getCurrentLanguage(), __DIR__.'/Locale');
+        Translator::load($this->languageModel->getCurrentLanguage(), __DIR__.'/Locale');
     }
 
     public function getClasses()
@@ -48,7 +47,7 @@ class Plugin extends Base
 
     public function getPluginVersion()
     {
-        return '0.0.2';
+        return '0.0.3';
     }
 
 	    public function getPluginHomepage()

@@ -2,8 +2,8 @@
 
 namespace Kanboard\Plugin\Analysis\Controller;
 
-use Kanboard\Controller\Base;
-use Kanboard\Model\Task as TaskModel;
+use Kanboard\Controller\BaseController;
+use Kanboard\Model\TaskModel;
 use Kanboard\Model\User;
 use Kanboard\Filter\TaskProjectFilter;
 
@@ -13,7 +13,7 @@ use Kanboard\Filter\TaskProjectFilter;
  * @package  controller
  * @author   Martin Middeke
  */
-class Analysis extends Base
+class AnalysisController extends BaseController
 {
 
     /**
@@ -45,7 +45,7 @@ $debug = 1;
         $this->response->html($this->analyticLayout('analysis:project/summary', array(
             'project' => $project,
             'paginator' => $paginator,
-            'link_label_list' => $this->link->getList(0, false),
+            'link_label_list' => $this->linkModel->getList(0, false),
             'title' => $project['name'].' &gt; ' . t('Summary'),
 			'debug' => $debug,
         )));
@@ -164,7 +164,7 @@ echo'</pre>';
     protected function getTask($project_id)
     {
         
-        $task = $this->taskFinder->getDetails($this->request->getIntegerParam('task_id'));
+        $task = $this->taskFinderModel->getDetails($this->request->getIntegerParam('task_id'));
 
         if (empty($task)) {
             $this->notfound();
@@ -266,7 +266,7 @@ echo'</pre>';
 #        $metrics = $this->taskDistributionAnalytic->build($project['id'], $swimlane_id);
         $metrics = $this->build($project['id'], $swimlane_id);
         $closedcount = 0;
-        $closedtasks = $this->taskFinder->getAll($project['id'], 0);
+        $closedtasks = $this->taskFinderModel->getAll($project['id'], 0);
 
         if ($swimlane_id > 0){
             foreach ($closedtasks as $closedtask) {
@@ -292,8 +292,8 @@ echo'</pre>';
             'project' => $project,
             'metrics' => $metrics,
             'title' => t('Task repartition for "%s"', $project['name']),
-            'swimlanes' => $this->swimlane->getAll($project['id']),
-            'swimlaneActive' => $this->swimlane->getNameById($swimlane_id),
+            'swimlanes' => $this->swimlaneModel->getAll($project['id']),
+            'swimlaneActive' => $this->swimlaneModel->getNameById($swimlane_id),
         )));
     }
 
@@ -302,15 +302,15 @@ echo'</pre>';
     {
         $metrics = array();
         $total = 0;
-        $columns = $this->column->getAll($project_id);
+        $columns = $this->columnModel->getAll($project_id);
 
         foreach ($columns as $column) {
             if ($swimlane_id === 0) {
-                $nb_tasks = $this->taskFinder->countByColumnId($project_id, $column['id']);
+                $nb_tasks = $this->taskFinderModel->countByColumnId($project_id, $column['id']);
             }
             else
             {
-                $nb_tasks = $this->taskFinder->countByColumnAndSwimlaneId($project_id, $column['id'], $swimlane_id);
+                $nb_tasks = $this->taskFinderModel->countByColumnAndSwimlaneId($project_id, $column['id'], $swimlane_id);
             }
 
             $total += $nb_tasks;
