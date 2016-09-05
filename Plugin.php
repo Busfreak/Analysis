@@ -11,7 +11,7 @@ class Plugin extends Base
     {
         $this->helper->register('AnalysisHelper', '\Kanboard\Plugin\Analysis\Helper\AnalysisHelper');
 		$this->template->hook->attach('template:analytic:sidebar', 'Analysis:analytic/sidebar-extension');
-        $this->hook->on('template:layout:head', 'Analysis:head');
+        $this->hook->on('template:layout:head', array('template' => 'Analysis:head'));
     }
 
     public function onStartup()
